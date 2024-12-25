@@ -1,21 +1,20 @@
 use base64::prelude::*;
 use serde::Deserialize;
 use std::time::{Duration, Instant};
-
-#[derive(Deserialize)]
-struct TokenResponse {
-    access_token: String,
-    expires_in: u64,
-}
-
-struct OAuthToken {
-    access_token: String,
-    expiration: Instant,
+#[derive(Debug)]
+pub(crate) struct OAuthToken {
+    pub(crate) access_token: String,
+    pub(crate) expiration: Instant,
 }
 impl OAuthToken {
     fn is_valid(&self) -> bool {
         self.expiration >= Instant::now()
     }
+}
+#[derive(Deserialize)]
+struct TokenResponse {
+    access_token: String,
+    expires_in: u64,
 }
 
 fn token_from_response(token: TokenResponse) -> OAuthToken {
@@ -25,7 +24,7 @@ fn token_from_response(token: TokenResponse) -> OAuthToken {
     }
 }
 
-struct OAuthClient {
+pub(crate) struct OAuthClient {
     http_client: reqwest::Client,
     client_id: String,
     client_secret: String,
@@ -39,7 +38,7 @@ impl OAuthClient {
         client_id: &str,
         client_secret: &str,
         refresh_url: &str,
-    ) -> OAuthClient {
+    ) -> Self {
         OAuthClient {
             http_client,
             client_id: client_id.to_string(),
@@ -49,7 +48,19 @@ impl OAuthClient {
         }
     }
 
-    async fn get_token(&mut self) -> &OAuthToken {
+    pub(crate) fn from_env() -> Self {
+        let client_id = std::env::var("CLIENT_ID").unwrap();
+        let client_secret = std::env::var("CLIENT_SECRET").unwrap();
+        let refresh_url = std::env::var("REFRESH_URL").unwrap();
+        OAuthClient::new(
+            reqwest::Client::new(),
+            client_id.as_str(),
+            client_secret.as_str(),
+            refresh_url.as_str(),
+        )
+    }
+
+    pub(crate) async fn get_token(&mut self) -> &OAuthToken {
         if self._token.is_none() {
             self.refresh_token().await;
         }
@@ -57,15 +68,11 @@ impl OAuthClient {
     }
 
     async fn refresh_token(&mut self) {
-        // let params = [
-        //     ("client_id", self.client_id.as_str()),
-        //     ("client_secret", self.client_secret.as_str()),
-        //     ("grant_type", "client_credentials"),
-        // ];
         let res = self
             .http_client
             .post(self.refresh_url.as_str())
             .basic_auth(self.client_id.as_str(), Some(self.client_secret.as_str()))
+            .form(&[("grant_type", "client_credentials")])
             .send()
             .await;
 
@@ -82,15 +89,6 @@ impl OAuthClient {
                         panic!("Failed to parse token response: {:?}", e);
                     }
                 }
-                // let token_response = res.json::<TokenReponse>().await;
-                // match token_response {
-                //     Ok(token_response) => {
-                //         self._token = Some(token_from_response(token_response));
-                //     }
-                //     Err(e) => {
-                //         panic!("Failed to parse token response: {:?}", e);
-                //     }
-                // }
             }
             Err(e) => {
                 panic!("Failed to refresh token: {:?}", e);
