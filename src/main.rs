@@ -1,5 +1,4 @@
 use std::path;
-use tokio::time::Instant;
 
 mod oauth;
 mod scrape;
@@ -17,6 +16,8 @@ async fn main() {
         .await
         .expect("Fetch failed");
 
+    let payload = storage::PayloadInfo::from_raw_bytes(response.as_bytes());
+
     let storage = storage::LocalStorage::new(path::Path::new("/tmp/dump"));
-    storage.store(response.as_str()).await;
+    storage.store(&payload).await;
 }
