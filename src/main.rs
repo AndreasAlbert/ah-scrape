@@ -8,7 +8,6 @@ use storage::Storage;
 async fn main() {
     let mut client = oauth::OAuthClient::from_env();
     let token = client.get_token().await;
-    println!("Token: {:?} ", token);
 
     let scraper = scrape::Scraper::new(token, "https://eu.api.blizzard.com/data/wow");
     let response = scraper

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-reqwest = { version = "0.12.9", features = ["json"] }
+reqwest = { version = "0.12.9", features = ["json","rustls-tls"], default-features = false }
 serde = { version = "1.0.216", features = ["derive"] }
 tokio = {version="1.42.0",  features = ["full"] }
 mockito = "1.6.1"
