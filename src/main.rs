@@ -28,8 +28,8 @@ struct ScrapeSubcommand {
     /// where to store the API response.
     target: String,
 
-    #[argh(option)]
-    /// API endpoint to scrape
+    #[argh(option, default = "String::from(\"/auctions/commodities\")")]
+    /// API endpoint to scrape, defaults to "/auctions/commodities"
     endpoint: String,
 }
 
