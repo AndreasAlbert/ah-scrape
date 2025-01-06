@@ -1,3 +1,4 @@
+use async_trait::async_trait;
 use chrono::{DateTime, Datelike, Utc};
 use sha256;
 use std::path::{Path, PathBuf};
@@ -32,6 +33,7 @@ impl PayloadInfo {
         )
     }
 }
+#[async_trait]
 
 pub(crate) trait Storage {
     async fn store(&self, payload: &PayloadInfo);
@@ -48,6 +50,7 @@ impl LocalStorage {
         }
     }
 }
+#[async_trait]
 
 impl Storage for LocalStorage {
     async fn store(&self, payload: &PayloadInfo) {
@@ -75,6 +78,13 @@ impl Storage for LocalStorage {
 //         let bytes = zstd::bulk::compress(payload.as_bytes(), 3).unwrap();
 //     }
 // }
+pub(crate) fn new_storage(uri: &str) -> Box<dyn Storage> {
+    if uri.starts_with("file://") {
+        Box::new(LocalStorage::new(Path::new(uri)))
+    } else {
+        panic!("URI in unsupported format: '{}'", uri);
+    }
+}
 
 #[cfg(test)]
 mod tests {

@@ -6,6 +6,7 @@ struct CommodityItem {
     id: u64,
 }
 #[derive(Deserialize)]
+#[allow(dead_code)]
 struct CommodityAuction {
     id: u64,
     item: CommodityItem,
